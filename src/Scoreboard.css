@@ -1,0 +1,639 @@
+/* ═══════════════════════════════════════════════
+   SCOREBOARD — Premium Cricket Theme
+   ═══════════════════════════════════════════════ */
+
+.sb-wrap {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 8px 0 40px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Batting team highlight ─────────────────────────── */
+.sb-batting-team {
+  color: #4ade80 !important;
+}
+
+/* ── Chase row in header ────────────────────────────── */
+.sb-chase-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 20px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding: 12px 20px;
+  background: rgba(251,191,36,.07);
+  border: 1px solid rgba(251,191,36,.2);
+  border-radius: 12px;
+}
+.sb-chase-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sb-chase-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #64748b; }
+.sb-chase-val { font-family: 'Rajdhani', sans-serif; font-size: 26px; font-weight: 700; color: #f8fafc; line-height: 1; }
+.sb-target-val { color: #fbbf24 !important; }
+
+/* ── Innings Break screen ───────────────────────────── */
+.sb-inning-break {
+  background: linear-gradient(145deg, #0b1120 0%, #0f1f38 60%, #091429 100%);
+  border: 1px solid rgba(99,102,241,.3);
+  border-radius: 22px;
+  padding: 36px 28px;
+  text-align: center;
+}
+.sib-badge {
+  display: inline-block;
+  font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: #818cf8;
+  background: rgba(99,102,241,.1);
+  border: 1px solid rgba(99,102,241,.2);
+  padding: 3px 14px; border-radius: 20px;
+  margin-bottom: 18px;
+}
+.sib-teams { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 24px; }
+.sib-team { font-size: 16px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #cbd5e1; }
+.sib-vs { font-size: 12px; color: #22c55e; padding: 3px 9px; border: 1px solid rgba(34,197,94,.3); border-radius: 6px; }
+
+.sib-inn1 { margin-bottom: 24px; }
+.sib-inn1-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.sib-inn1-score { font-family: 'Rajdhani', sans-serif; line-height: 1; }
+.sib-runs { font-size: 72px; font-weight: 700; color: #f8fafc; }
+.sib-sep  { font-size: 44px; font-weight: 300; color: #334155; }
+.sib-wkt  { font-size: 54px; font-weight: 700; color: #f87171; }
+.sib-inn1-meta { font-size: 13px; color: #64748b; margin-top: 6px; }
+
+.sib-target-box {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(251,191,36,.07);
+  border: 1px solid rgba(251,191,36,.25);
+  margin-bottom: 24px;
+}
+.sib-target-label { font-size: 11px; color: #92400e; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+.sib-target-num { font-family: 'Rajdhani', sans-serif; font-size: 80px; font-weight: 700; color: #fbbf24; line-height: 1; }
+.sib-target-sub { font-size: 15px; color: #d97706; margin-top: 8px; }
+
+.sib-waiting { margin-top: 8px; }
+.sib-waiting p { color: #475569; font-size: 14px; margin-bottom: 12px; }
+
+/* ── Result Banner ──────────────────────────────────── */
+.sb-result-banner {
+  background: linear-gradient(145deg, #0b1120, #1a1a2e);
+  border: 1px solid rgba(251,191,36,.35);
+  border-radius: 22px;
+  padding: 36px 24px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.sbr-emoji  { font-size: 52px; margin-bottom: 8px; }
+.sbr-result { font-size: 26px; font-weight: 800; color: #fbbf24; margin-bottom: 10px; }
+.sbr-summary { font-size: 15px; color: #64748b; }
+
+
+
+/* ── Loading / Waiting ──────────────────────────── */
+.sb-loading,
+.sb-waiting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 18px;
+  color: #475569;
+}
+.sb-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid #1e293b;
+  border-top-color: #22c55e;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.sb-waiting .cricket-icon { font-size: 64px; }
+.sb-waiting h2 { font-size: 26px; color: #e2e8f0; font-weight: 700; }
+.sb-waiting p  { color: #64748b; }
+
+.waiting-dots { display: flex; gap: 8px; }
+.waiting-dots span {
+  width: 8px; height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  animation: wbounce 1.2s ease-in-out infinite;
+}
+.waiting-dots span:nth-child(2) { animation-delay: .2s; }
+.waiting-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes wbounce {
+  0%,80%,100% { transform: translateY(0); }
+  40%         { transform: translateY(-10px); }
+}
+
+/* ── HEADER ─────────────────────────────────────── */
+.sb-header {
+  background: linear-gradient(145deg, #0b1120 0%, #0f1f38 60%, #091429 100%);
+  border: 1px solid #1e3a5f;
+  border-radius: 22px;
+  padding: 32px 28px 24px;
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.4s;
+}
+.sb-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(34,197,94,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sb-inning-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #22c55e;
+  background: rgba(34,197,94,.1);
+  border: 1px solid rgba(34,197,94,.2);
+  padding: 3px 12px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+
+.sb-teams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+.sb-team-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #cbd5e1;
+}
+.sb-vs {
+  font-size: 12px;
+  font-weight: 600;
+  color: #22c55e;
+  padding: 4px 10px;
+  border: 1px solid rgba(34,197,94,.3);
+  border-radius: 6px;
+}
+
+/* Big score */
+.sb-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  line-height: 1;
+}
+.sb-runs {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 96px;
+  font-weight: 700;
+  color: #f8fafc;
+  text-shadow: 0 0 50px rgba(34,197,94,.25);
+  transition: color 0.3s;
+}
+.sb-divider {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 52px;
+  font-weight: 300;
+  color: #334155;
+}
+.sb-wickets {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 66px;
+  font-weight: 700;
+  color: #f87171;
+}
+
+/* Meta row */
+.sb-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 15px;
+  color: #94a3b8;
+}
+.sb-meta-sep { color: #334155; }
+.sb-crr { color: #fbbf24; font-weight: 600; }
+.sb-extras { font-size: 13px; color: #64748b; }
+
+/* Status badge */
+.sb-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+.sb-live-badge.live {
+  background: rgba(239,68,68,.12);
+  color: #f87171;
+  border: 1px solid rgba(239,68,68,.3);
+}
+.sb-live-badge.finished {
+  background: rgba(34,197,94,.1);
+  color: #4ade80;
+  border: 1px solid rgba(34,197,94,.2);
+}
+.sb-live-dot {
+  width: 8px; height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  animation: livepulse 1.4s ease-in-out infinite;
+}
+@keyframes livepulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Pulse on score update */
+.sb-header.sb-pulse {
+  box-shadow: 0 0 0 3px rgba(34,197,94,.3);
+  animation: scorepulse .5s ease;
+}
+@keyframes scorepulse {
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.5); }
+  100% { box-shadow: 0 0 0 18px rgba(34,197,94,0); }
+}
+
+/* ── LAST ACTION BANNER ──────────────────────────── */
+.sb-last-action {
+  text-align: center;
+  padding: 12px 20px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 700;
+  border: 1px solid #1e293b;
+  background: rgba(255,255,255,.03);
+  animation: slideDown .35s ease;
+  transition: background .3s, border-color .3s;
+}
+.sb-last-action.la-wicket {
+  background: rgba(239,68,68,.12);
+  border-color: rgba(239,68,68,.35);
+  color: #fca5a5;
+}
+.sb-last-action.la-four {
+  background: rgba(34,197,94,.1);
+  border-color: rgba(34,197,94,.35);
+  color: #86efac;
+}
+.sb-last-action.la-six {
+  background: rgba(251,191,36,.1);
+  border-color: rgba(251,191,36,.35);
+  color: #fde68a;
+}
+@keyframes slideDown {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── SECTION ─────────────────────────────────────── */
+.sb-section {
+  background: rgba(15,23,42,.85);
+  border: 1px solid #1e293b;
+  border-radius: 18px;
+  padding: 20px 22px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(8px);
+}
+.sb-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #22c55e;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #1e293b;
+}
+
+/* ── BALL DOTS ───────────────────────────────────── */
+.sb-over-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sb-ball-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+.sb-ball-dot:hover { transform: scale(1.1); }
+
+/* mini version used in over history */
+.sb-ball-mini {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+/* ── TABLES ─────────────────────────────────────── */
+.sb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.sb-table th {
+  padding: 8px 12px;
+  text-align: right;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-bottom: 1px solid #1e293b;
+}
+.sb-table th:first-child { text-align: left; }
+.sb-table td {
+  padding: 11px 12px;
+  text-align: right;
+  border-bottom: 1px solid rgba(30,41,59,.5);
+  color: #94a3b8;
+}
+.sb-table td:first-child { text-align: left; color: #e2e8f0; font-weight: 500; }
+.sb-table tbody tr:last-child td { border-bottom: none; }
+.sb-table tbody tr:hover { background: rgba(255,255,255,.02); }
+
+/* Striker row */
+.sb-striker-row td:first-child { color: #4ade80 !important; }
+.sb-striker-row { background: rgba(34,197,94,.04) !important; }
+.striker-star { color: #22c55e; margin-right: 3px; }
+
+/* Bowler row */
+.sb-bowler-row { background: rgba(99,102,241,.04) !important; }
+
+/* Out row */
+.sb-out-row td { color: #334155 !important; }
+.sb-out-row td:first-child { text-decoration: line-through; }
+
+/* ── FALL OF WICKETS ─────────────────────────────── */
+.sb-fow-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sb-fow-item {
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #fca5a5;
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.18);
+}
+
+/* ── OVER HISTORY ────────────────────────────────── */
+.sb-oh-list { display: flex; flex-direction: column; gap: 8px; }
+.sb-oh-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.02);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+.sb-oh-num { font-size: 11px; color: #475569; font-weight: 700; min-width: 44px; flex-shrink: 0; }
+.sb-oh-balls { display: flex; gap: 6px; flex-wrap: wrap; }
+.sb-oh-total { font-size: 12px; color: #64748b; margin-left: auto; flex-shrink: 0; }
+
+/* ── CHARTS ──────────────────────────────────────── */
+.sb-chart-wrap { padding-top: 8px; }
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .sb-runs   { font-size: 72px; }
+  .sb-wickets{ font-size: 48px; }
+  .sb-divider{ font-size: 40px; }
+  .sb-team-name { font-size: 14px; }
+  .sb-section { padding: 16px; }
+  .sb-ball-dot { width: 34px; height: 34px; font-size: 12px; }
+}
+
+/* -------------------------------------------------------------------
+   AI INTELLIGENCE BANNER � IPL broadcast style
+   ------------------------------------------------------------------- */
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.sb-ai-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 16px 22px;
+  margin: 16px 0;
+  border-radius: 16px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(79,70,229,.12), rgba(124,58,237,.08), rgba(6,182,212,.06));
+  border: 1px solid rgba(99,102,241,.3);
+  transition: all .25s;
+  animation: bannerSlideIn .5s cubic-bezier(.16,1,.3,1) forwards;
+}
+
+.sb-ai-banner::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 17px;
+  background: conic-gradient(from var(--angle), #4f46e5, #7c3aed, #06b6d4, #4f46e5);
+  animation: rotateBorder 4s linear infinite;
+  z-index: -1;
+  opacity: 0.35;
+}
+
+.sb-ai-banner::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #0d1117, #0f172a);
+  z-index: -1;
+}
+
+@keyframes rotateBorder { to { --angle: 360deg; } }
+@keyframes bannerSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sb-ai-banner:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99,102,241,.6);
+  box-shadow: 0 8px 32px rgba(79,70,229,.2);
+}
+
+.sb-ai-banner--result {
+  background: linear-gradient(135deg, rgba(251,191,36,.08), rgba(239,68,68,.06));
+  border-color: rgba(251,191,36,.3);
+}
+.sb-ai-banner--result::before {
+  background: conic-gradient(from var(--angle), #f59e0b, #ef4444, #f59e0b);
+}
+
+.sb-ai-banner-left { display: flex; align-items: center; gap: 14px; }
+
+.sb-ai-glow-dot {
+  width: 14px; height: 14px; border-radius: 50%; background: #818cf8; flex-shrink: 0;
+  animation: aiDotPulse 1.8s ease-in-out infinite;
+}
+.sb-ai-banner--result .sb-ai-glow-dot { background: #fbbf24; }
+
+@keyframes aiDotPulse {
+  0%   { box-shadow: 0 0 0 0   rgba(129,140,248,.7); }
+  50%  { box-shadow: 0 0 0 8px rgba(129,140,248,0);  }
+  100% { box-shadow: 0 0 0 0   rgba(129,140,248,0);  }
+}
+
+.sb-ai-banner-text { display: flex; flex-direction: column; gap: 3px; }
+.sb-ai-label { font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #a5b4fc; text-transform: uppercase; }
+.sb-ai-banner--result .sb-ai-label { color: #fbbf24; }
+.sb-ai-desc { font-size: 12px; color: #475569; }
+.sb-ai-banner-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.sb-ai-pill {
+  padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .5px;
+  color: #818cf8; background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.25); transition: all .2s;
+}
+.sb-ai-banner:hover .sb-ai-pill { background: rgba(99,102,241,.2); border-color: rgba(99,102,241,.5); }
+.sb-ai-arrow { font-size: 22px; color: #4f46e5; font-weight: 900; transition: transform .25s; }
+.sb-ai-banner:hover .sb-ai-arrow { transform: translateX(5px); }
+
+/* -- Floating AI Button ------------------------------ */
+.sb-ai-fab {
+  position: fixed; bottom: 32px; right: 32px; z-index: 9999;
+  width: 68px; height: 68px; border-radius: 50%; border: none;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed, #06b6d4);
+  background-size: 200% 200%;
+  animation: fabGradient 3s ease infinite, fabEntrance .6s cubic-bezier(.16,1,.3,1) both;
+  cursor: pointer; font-size: 28px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px rgba(79,70,229,.5), 0 0 60px rgba(124,58,237,.3);
+  transition: transform .2s, box-shadow .2s; color: white;
+}
+@keyframes fabGradient {
+  0%,100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes fabEntrance {
+  from { opacity: 0; transform: scale(0.5) translateY(20px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+.sb-ai-fab:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 10px rgba(99,102,241,.12), 0 12px 40px rgba(79,70,229,.6), 0 0 80px rgba(124,58,237,.35);
+}
+.sb-ai-fab:active { transform: scale(.95); }
+
+.sb-ai-fab-ring {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid rgba(129,140,248,.55);
+  animation: fabRipple 2.5s ease-out infinite;
+  pointer-events: none;
+}
+.sb-ai-fab-ring.r2 { animation-delay: 1.25s; }
+@keyframes fabRipple {
+  0%   { transform: scale(1);   opacity: .8; }
+  100% { transform: scale(2.3); opacity: 0;  }
+}
+
+@media (max-width: 640px) {
+  .sb-ai-fab { width: 56px; height: 56px; font-size: 22px; bottom: 20px; right: 16px; }
+  .sb-ai-banner { flex-direction: column; align-items: flex-start; }
+  .sb-ai-banner-right { width: 100%; justify-content: flex-start; }
+}
+
+/* ── INLINE WIN PROBABILITY (Cricbuzz Style) ── */
+.sb-inline-prob-container {
+  background: rgba(15,23,42,.9);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  animation: slideDown 0.3s ease-out;
+}
+.sb-prob-header {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-align: center;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.sb-prob-teams {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f8fafc;
+  margin-bottom: 6px;
+}
+.sb-prob-bar-wrapper {
+  position: relative;
+  height: 24px;
+  background: #1e293b;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.sb-prob-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: width 0.8s ease-in-out;
+}
+.sb-prob-labels {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  box-sizing: border-box;
+}
+.sb-prob-prediction {
+  font-size: 13px;
+  color: #e2e8f0;
+  text-align: center;
+  font-style: italic;
+}

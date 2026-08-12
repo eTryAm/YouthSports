@@ -1,0 +1,460 @@
+/* ═══════════════════════════════════════════════
+   OBS BROADCAST OVERLAY STYLES
+   ═══════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Inter:wght@400;600;700;800&display=swap');
+
+/* When Overlay is mounted, this class is added to body */
+body.obs-overlay-mode {
+  background: transparent !important;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* No scrollbars in OBS */
+}
+
+/* Hide the main navbar if we're in overlay mode */
+body.obs-overlay-mode .app-nav {
+  display: none !important;
+}
+
+body.obs-overlay-mode main {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* ── Container ── */
+.overlay-transparent {
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+}
+
+.overlay-wrapper {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.overlay-container {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  color: white;
+  box-sizing: border-box;
+  /* Transform origin center keeps it centered when scaled */
+  transform-origin: center;
+}
+
+/* ── Top Left: Tournament & LIVE ── */
+.ov-top-left {
+  position: absolute;
+  top: 40px;
+  left: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ov-tournament-name {
+  background: rgba(10, 18, 30, 0.85);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-left: 4px solid #3b82f6; /* Blue accent */
+  padding: 8px 20px;
+  font-family: 'Teko', sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-radius: 4px 12px 12px 4px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.ov-live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(220, 38, 38, 0.9);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  width: fit-content;
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
+}
+
+.ov-live-dot {
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.8); }
+}
+
+/* ── Top Right: CRR & Sponsor ── */
+.ov-top-right {
+  position: absolute;
+  top: 40px;
+  right: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.ov-sponsor-area {
+  background: rgba(10, 18, 30, 0.85);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 10px 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  text-align: right;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.ov-sponsor-text {
+  font-size: 11px;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.ov-sponsor-placeholder {
+  font-family: 'Teko', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-top: 4px;
+}
+
+/* ── Animated Banners (Four, Six, Wicket) ── */
+.ov-event-banner {
+  position: absolute;
+  bottom: 180px; /* Right above the score bug */
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 60px;
+  border-radius: 12px;
+  font-family: 'Teko', sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  backdrop-filter: blur(12px);
+  z-index: 10;
+}
+
+.slide-in-bottom {
+  animation: slideUpFade 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+             slideDownFade 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045) 3.6s forwards;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translate(-50%, 50px) scale(0.9); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@keyframes slideDownFade {
+  from { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  to { opacity: 0; transform: translate(-50%, 50px) scale(0.9); }
+}
+
+.type-four {
+  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+  border: 2px solid #60a5fa;
+}
+
+.type-six {
+  background: linear-gradient(90deg, #c2410c, #f97316);
+  border: 2px solid #fb923c;
+}
+
+.type-wicket {
+  background: linear-gradient(90deg, #991b1b, #ef4444);
+  border: 2px solid #f87171;
+  animation: slideUpFade 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+             wicketPulse 0.5s alternate infinite,
+             slideDownFade 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045) 3.6s forwards;
+}
+
+@keyframes wicketPulse {
+  from { box-shadow: 0 0 20px #ef4444; }
+  to { box-shadow: 0 0 50px #ef4444; }
+}
+
+/* ── Full Screen Banners (Result, Innings Break) ── */
+.overlay-banner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(10, 18, 30, 0.95);
+  border: 2px solid rgba(59,130,246, 0.5);
+  padding: 50px 100px;
+  border-radius: 20px;
+  text-align: center;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+}
+
+.banner-title {
+  font-family: 'Teko', sans-serif;
+  font-size: 72px;
+  color: #3b82f6;
+  margin-bottom: 10px;
+  letter-spacing: 4px;
+}
+
+.banner-value {
+  font-size: 48px;
+  font-weight: 800;
+  color: white;
+}
+
+.slide-in {
+  animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translate(-50%, -40%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+
+/* ── Bottom Score Bug ── */
+.ov-bottom-bar {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1400px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 18, 30, 0.88);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+
+/* Main Score Area */
+.ov-main-score {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(90deg, #0f172a, #1e293b);
+  padding: 0;
+  height: 70px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.ov-team-name {
+  background: #3b82f6;
+  color: white;
+  font-family: 'Teko', sans-serif;
+  font-size: 42px;
+  font-weight: 600;
+  padding: 0 30px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  letter-spacing: 1px;
+}
+
+.ov-score-runs {
+  display: flex;
+  align-items: baseline;
+  padding: 0 30px;
+  font-family: 'Inter', sans-serif;
+}
+.ov-score-runs .runs {
+  font-size: 48px;
+  font-weight: 800;
+  color: #fbbf24; /* yellow/gold */
+}
+.ov-score-runs .slash {
+  font-size: 40px;
+  font-weight: 400;
+  color: #64748b;
+  margin: 0 6px;
+}
+.ov-score-runs .wickets {
+  font-size: 48px;
+  font-weight: 800;
+  color: white;
+}
+
+.ov-overs {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 30px;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  height: 100%;
+}
+.ov-overs-val {
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 70px;
+}
+.ov-overs-lbl {
+  font-size: 16px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.ov-crr {
+  padding: 0 30px;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.ov-target-box {
+  margin-left: auto; /* push to right */
+  display: flex;
+  align-items: center;
+  background: rgba(220, 38, 38, 0.15);
+  border-left: 2px solid #ef4444;
+  height: 100%;
+  padding: 0 25px;
+  gap: 20px;
+}
+.target-lbl {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ef4444;
+}
+.req-lbl {
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+}
+
+/* Player Stats Area */
+.ov-players-area {
+  display: flex;
+  width: 100%;
+  height: 60px;
+}
+
+/* Batsmen */
+.ov-batsmen {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  padding: 0 20px;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.ov-player-row {
+  display: flex;
+  align-items: baseline;
+  padding: 0 20px;
+  min-width: 250px;
+}
+.ov-player-row.active-striker .p-name {
+  color: #fbbf24;
+}
+.bat-icon {
+  font-size: 14px;
+  margin-left: 6px;
+}
+.p-name {
+  font-size: 22px;
+  font-weight: 700;
+  margin-right: 15px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.p-runs {
+  font-size: 26px;
+  font-weight: 800;
+  margin-right: 8px;
+}
+.p-balls, .p-overs {
+  font-size: 18px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+.p-stat {
+  font-size: 26px;
+  font-weight: 800;
+  margin-right: 8px;
+  color: #4ade80; /* green for bowler stat */
+}
+
+.ov-partnership {
+  margin-left: auto;
+  font-size: 18px;
+  color: #cbd5e1;
+}
+.ov-partnership strong {
+  font-size: 24px;
+  color: white;
+}
+
+/* Bowler & Recent */
+.ov-bowler-section {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+.ov-bowler-row {
+  display: flex;
+  align-items: baseline;
+  padding: 0 10px;
+}
+
+.ov-recent-balls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px;
+}
+.recent-lbl {
+  font-size: 14px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 1px;
+}
+.recent-balls-list {
+  display: flex;
+  gap: 6px;
+}
+.ov-ball {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 800;
+  background: #1e293b;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.ov-ball.b-4 { background: #3b82f6; border-color: #60a5fa; }
+.ov-ball.b-6 { background: #f97316; border-color: #fb923c; }
+.ov-ball.b-W { background: #ef4444; border-color: #f87171; }
+.ov-ball.b-0 { color: #94a3b8; }
+.ov-ball.b-Wd, .ov-ball.b-Nb { background: #475569; font-size: 14px; }

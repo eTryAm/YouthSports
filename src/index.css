@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #020817;
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Shared ball dot colors ───────────────────────────────── */
+.ball-0  { background: #334155; }
+.ball-1  { background: #475569; }
+.ball-2  { background: #0369a1; }
+.ball-3  { background: #7c3aed; }
+.ball-4  { background: #16a34a; box-shadow: 0 0 10px rgba(22,163,74,.5); }
+.ball-6  { background: #92400e; color: #fde68a; box-shadow: 0 0 10px rgba(251,191,36,.4); }
+.ball-W  { background: #dc2626; box-shadow: 0 0 10px rgba(220,38,38,.5); }
+.ball-Wd { background: #c2410c; color: #fed7aa; }
+.ball-Nb { background: #c2410c; color: #fed7aa; }
+.ball-empty { background: transparent !important; border: 2px dashed #1e293b !important; color: #334155 !important; box-shadow: none !important; }
