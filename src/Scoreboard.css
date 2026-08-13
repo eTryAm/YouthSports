@@ -637,3 +637,12 @@
   text-align: center;
   font-style: italic;
 }
+
+
+/* ── TABS ── */
+.sb-tabs { display: flex; gap: 8px; margin: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; overflow-x: auto; }
+.sb-tab { background: transparent; color: #94a3b8; border: none; font-size: 14px; font-weight: 600; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; white-space: nowrap; }
+.sb-tab:hover { color: #f8fafc; background: rgba(255,255,255,0.05); }
+.sb-tab.active { color: #22c55e; background: rgba(34,197,94,0.1); }
+.sb-tab-content { animation: fadeIn 0.3s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
