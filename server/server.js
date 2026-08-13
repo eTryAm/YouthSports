@@ -1,3 +1,5 @@
+// Force IPv4 over IPv6 — fixes Render + Supabase ENETUNREACH error
+require('dns').setDefaultResultOrder('ipv4first');
 require('dotenv').config();
 const express = require('express');
 const http    = require('http');

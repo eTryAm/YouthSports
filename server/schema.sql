@@ -443,3 +443,23 @@ ORDER BY
        - (total_runs_conceded::NUMERIC / nrr_balls_bowled * 6)
     ELSE 0
   END DESC;
+
+-- =============================================================================
+-- ADMIN-MANAGED TOURNAMENT STANDINGS
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS tournament_standings (
+  id          SERIAL PRIMARY KEY,
+  team_name   VARCHAR(100) NOT NULL,
+  status      VARCHAR(20)  NOT NULL DEFAULT 'DRAFT',  -- 'DRAFT' or 'PUBLISHED'
+  played      INT DEFAULT 0,
+  wins        INT DEFAULT 0,
+  losses      INT DEFAULT 0,
+  ties        INT DEFAULT 0,
+  no_results  INT DEFAULT 0,
+  points      INT DEFAULT 0,
+  rrd         NUMERIC(8,2) DEFAULT 0.00,
+  updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_by  VARCHAR(100) DEFAULT 'SYSTEM',
+  UNIQUE(team_name, status)
+);

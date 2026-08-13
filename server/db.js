@@ -10,7 +10,9 @@ const pool = new Pool(
   process.env.DATABASE_URL 
     ? { 
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false } // Required for most cloud providers like Render/Supabase
+        ssl: { rejectUnauthorized: false },
+        // Force IPv4 — Render free tier cannot reach Supabase via IPv6
+        connectionTimeoutMillis: 10000,
       }
     : {
         host    : process.env.DB_HOST     || 'localhost',
@@ -20,6 +22,10 @@ const pool = new Pool(
         password: process.env.DB_PASSWORD || 'postgres',
       }
 );
+
+// Force Node.js to prefer IPv4 over IPv6 (fixes Render + Supabase ENETUNREACH)
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
 
 pool.on('error', err => console.error('⚠️  DB pool error:', err.message));
 
