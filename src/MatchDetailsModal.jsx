@@ -10,7 +10,7 @@ export default function MatchDetailsModal({ matchId, onClose }) {
   useEffect(() => {
     const fetchMatch = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/tournament/match/${matchId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/tournament/match/${matchId}`);
         if (!res.ok) throw new Error('Failed to fetch match details');
         const data = await res.json();
         setMatchData(data);

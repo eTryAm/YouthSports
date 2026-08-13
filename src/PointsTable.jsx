@@ -12,7 +12,7 @@ const PointsTable = () => {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/tournament/standings`;
+      const apiUrl = `${import.meta.env.VITE_API_URL || ''}/api/tournament/standings`;
       const response = await fetch(apiUrl);
       if (!response.ok) {
         throw new Error('Failed to fetch data');

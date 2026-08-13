@@ -16,7 +16,7 @@ export default function AdminStandings() {
   const fetchStandings = async () => {
     setLoading(true);
     try {
-      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/standings`;
+      const apiUrl = `${import.meta.env.VITE_API_URL || ''}/api/admin/standings`;
       const res = await fetch(apiUrl);
       if (!res.ok) throw new Error('Failed to fetch admin standings');
       const data = await res.json();
@@ -68,7 +68,7 @@ export default function AdminStandings() {
         };
       });
 
-      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/standings/draft`;
+      const apiUrl = `${import.meta.env.VITE_API_URL || ''}/api/admin/standings/draft`;
       const res = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -91,7 +91,7 @@ export default function AdminStandings() {
 
     setPublishing(true);
     try {
-      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/standings/publish`;
+      const apiUrl = `${import.meta.env.VITE_API_URL || ''}/api/admin/standings/publish`;
       const res = await fetch(apiUrl, { method: 'POST' });
       if (!res.ok) throw new Error('Failed to publish standings');
       

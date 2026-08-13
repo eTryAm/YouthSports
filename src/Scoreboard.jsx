@@ -179,11 +179,11 @@ export default function Scoreboard() {
           🤖
         </button>
 
-        {/* Inning 1 scorecard */}
+        {/* Inning 1 batting */}
         {inn1 && inn1.players.some(p => p.balls > 0) && (
           <div className="sb-section">
             <div className="sb-section-title">
-              Inning 1 — {match.team1Name || "Team 1"} Batting
+              Inning 1 — {match.team1Name || "Team 1"} Batting · {inn1.totalRuns}/{inn1.wickets}
             </div>
             <table className="sb-table">
               <thead><tr><th>Batsman</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr></thead>
@@ -203,11 +203,32 @@ export default function Scoreboard() {
           </div>
         )}
 
-        {/* Inning 2 scorecard */}
+        {/* Inning 1 bowling (Team 2 bowled during inning 1) */}
+        {inn1 && inn1.bowlers && inn1.bowlers.some(b => b.ballsBowled > 0) && (
+          <div className="sb-section">
+            <div className="sb-section-title">{match.team2Name || "Team 2"} Bowling (Inning 1)</div>
+            <table className="sb-table">
+              <thead><tr><th>Bowler</th><th>O</th><th>R</th><th>W</th><th>Econ</th></tr></thead>
+              <tbody>
+                {inn1.bowlers.filter(b => b.ballsBowled > 0).map((b, i) => (
+                  <tr key={i}>
+                    <td>{b.name}</td>
+                    <td>{Math.floor(b.ballsBowled/6)}.{b.ballsBowled%6}</td>
+                    <td>{b.runsConceded}</td>
+                    <td>{b.wickets}</td>
+                    <td>{((b.runsConceded/b.ballsBowled)*6).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Inning 2 batting */}
         {match.players.some(p => p.balls > 0 || p.status !== "yet_to_bat") && (
           <div className="sb-section">
             <div className="sb-section-title">
-              Inning 2 — {match.team2Name || "Team 2"} Batting
+              Inning 2 — {match.team2Name || "Team 2"} Batting · {match.totalRuns}/{match.wickets}
             </div>
             <table className="sb-table">
               <thead><tr><th>Batsman</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th></tr></thead>
@@ -227,14 +248,14 @@ export default function Scoreboard() {
           </div>
         )}
 
-        {/* Inning 1 bowling */}
-        {inn1 && inn1.bowlers.some(b => b.ballsBowled > 0) && (
+        {/* Inning 2 bowling (Team 1 bowled during inning 2) */}
+        {match.bowlers && match.bowlers.some(b => b.ballsBowled > 0) && (
           <div className="sb-section">
-            <div className="sb-section-title">{match.team2Name || "Team 2"} Bowling (Inning 1)</div>
+            <div className="sb-section-title">{match.team1Name || "Team 1"} Bowling (Inning 2)</div>
             <table className="sb-table">
               <thead><tr><th>Bowler</th><th>O</th><th>R</th><th>W</th><th>Econ</th></tr></thead>
               <tbody>
-                {inn1.bowlers.filter(b => b.ballsBowled > 0).map((b, i) => (
+                {match.bowlers.filter(b => b.ballsBowled > 0).map((b, i) => (
                   <tr key={i}>
                     <td>{b.name}</td>
                     <td>{Math.floor(b.ballsBowled/6)}.{b.ballsBowled%6}</td>

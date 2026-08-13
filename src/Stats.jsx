@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import MatchDetailsModal from "./MatchDetailsModal.jsx";
 import "./Stats.css";
 
-const API = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/stats`;
+const API = `${import.meta.env.VITE_API_URL || ''}/api/stats`;
 
 /* ── Rank medal ─────────────────────────────────────────────────────────── */
 const MEDALS = ["🥇", "🥈", "🥉"];

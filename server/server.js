@@ -261,11 +261,6 @@ app.get('/api/tournament/match/:id', async (req, res) => {
   }
 });
 
-app.get('/api/stats/teams', async (_req, res) => {
-  try { res.json((await getTeamStats()).rows); }
-  catch (e) { res.status(500).json({ error: e.message }); }
-});
-
 app.get('/api/stats/matches', async (_req, res) => {
   try { res.json((await getMatchHistory()).rows); }
   catch (e) { res.status(500).json({ error: e.message }); }
