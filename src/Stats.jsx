@@ -135,7 +135,6 @@ export default function Stats() {
                     <Th label="50"  field="half_centuries"     {...battingTbl} onToggle={battingTbl.toggle} />
                     <Th label="4s"  field="total_fours"        {...battingTbl} onToggle={battingTbl.toggle} />
                     <Th label="6s"  field="total_sixes"        {...battingTbl} onToggle={battingTbl.toggle} />
-                    <Th label="NO"  field="not_outs"           {...battingTbl} onToggle={battingTbl.toggle} />
                   </tr>
                 </thead>
                 <tbody>
@@ -153,7 +152,6 @@ export default function Stats() {
                       <td>{p.half_centuries}</td>
                       <td>{p.total_fours}</td>
                       <td>{p.total_sixes}</td>
-                      <td>{p.not_outs}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -181,13 +179,9 @@ export default function Stats() {
                     <th>#</th>
                     <th>Player</th>
                     <Th label="M"    field="matches_played"     {...bowlingTbl} onToggle={bowlingTbl.toggle} />
-                    <Th label="W"    field="total_wickets"       {...bowlingTbl} onToggle={bowlingTbl.toggle} />
-                    <Th label="O"    field="total_balls_bowled"  {...bowlingTbl} onToggle={bowlingTbl.toggle} />
                     <Th label="R"    field="total_runs_conceded" {...bowlingTbl} onToggle={bowlingTbl.toggle} />
-                    <Th label="Avg"  field="bowling_average"     {...bowlingTbl} onToggle={bowlingTbl.toggle} />
+                    <Th label="W"    field="total_wickets"       {...bowlingTbl} onToggle={bowlingTbl.toggle} />
                     <Th label="Econ" field="economy"             {...bowlingTbl} onToggle={bowlingTbl.toggle} />
-                    <Th label="SR"   field="bowling_sr"          {...bowlingTbl} onToggle={bowlingTbl.toggle} />
-                    <Th label="BB"   field="best_bowling_wickets" {...bowlingTbl} onToggle={bowlingTbl.toggle} />
                     <Th label="5W"   field="five_wicket_hauls"   {...bowlingTbl} onToggle={bowlingTbl.toggle} />
                   </tr>
                 </thead>
@@ -197,13 +191,9 @@ export default function Stats() {
                       <td className="st-rank">{i + 1}</td>
                       <td>{p.player_name}</td>
                       <td>{p.matches_played}</td>
-                      <td className="st-highlight">{p.total_wickets}</td>
-                      <td>{p.overs_bowled}</td>
                       <td>{p.total_runs_conceded}</td>
-                      <td>{p.bowling_average != null ? fmt(p.bowling_average) : "–"}</td>
+                      <td className="st-highlight">{p.total_wickets}</td>
                       <td className={parseFloat(p.economy) > 8 ? "st-warn" : ""}>{fmt(p.economy)}</td>
-                      <td>{p.bowling_sr != null ? fmt(p.bowling_sr) : "–"}</td>
-                      <td>{p.best_bowling}</td>
                       <td>{p.five_wicket_hauls}</td>
                     </tr>
                   ))}

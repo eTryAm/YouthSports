@@ -45,6 +45,21 @@ export default function AdminStandings() {
     }));
   };
 
+  const handleAddTeam = () => {
+    const newTeam = prompt("Enter new team name:");
+    if (newTeam && newTeam.trim()) {
+      if (standings.find(t => t.teamName.toLowerCase() === newTeam.trim().toLowerCase())) {
+        showMessage("Team already exists in the table.", "error");
+        return;
+      }
+      setStandings(prev => [...prev, {
+        teamName: newTeam.trim(),
+        draft: { played: 0, wins: 0, losses: 0, ties: 0, noResults: 0, points: 0, rrd: 0 },
+        published: null
+      }]);
+    }
+  };
+
   const saveDraft = async () => {
     setSaving(true);
     try {
@@ -111,7 +126,10 @@ export default function AdminStandings() {
     <div className="ap-card" style={{ marginTop: '20px' }}>
       <h3 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>📊 RRD & STANDINGS MANAGEMENT</span>
-        <button onClick={fetchStandings} className="btn" style={{ padding: '4px 8px', fontSize: '12px', background: '#334155' }}>↻ Reload</button>
+        <div>
+          <button onClick={handleAddTeam} className="btn" style={{ padding: '4px 8px', fontSize: '12px', background: '#4f46e5', marginRight: '8px' }}>+ Add Team</button>
+          <button onClick={fetchStandings} className="btn" style={{ padding: '4px 8px', fontSize: '12px', background: '#334155' }}>↻ Reload</button>
+        </div>
       </h3>
       
       <div style={{ background: '#334155', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontSize: '13px', color: '#cbd5e1' }}>
@@ -211,7 +229,7 @@ export default function AdminStandings() {
                     <input type="number" value={t.draft.points} onChange={(e) => handleInputChange(t.teamName, 'points', e.target.value)} style={{ ...inputStyle, border: '1px solid #4ade80' }} />
                   </td>
                   <td style={{ padding: '8px 4px', textAlign: 'right' }}>
-                    <input type="number" step="0.01" value={t.draft.rrd} onChange={(e) => handleInputChange(t.teamName, 'rrd', e.target.value)} style={{ ...inputStyle, width: '70px', textAlign: 'right' }} />
+                    <input type="text" value={t.draft.rrd} onChange={(e) => handleInputChange(t.teamName, 'rrd', e.target.value)} style={{ ...inputStyle, width: '70px', textAlign: 'right' }} />
                   </td>
                 </tr>
               ))}
