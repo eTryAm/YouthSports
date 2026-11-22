@@ -1,0 +1,5 @@
+/** Applies the additive standardized-scorecard migration. */
+require('dotenv').config();
+const fs = require('fs'); const path = require('path'); const { Pool } = require('pg');
+const pool = new Pool(process.env.DATABASE_URL ? { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } } : { host: process.env.DB_HOST || 'localhost', port: Number(process.env.DB_PORT) || 5432, database: process.env.DB_NAME || 'cricket_db', user: process.env.DB_USER || 'postgres', password: process.env.DB_PASSWORD || 'postgres' });
+(async () => { const client = await pool.connect(); try { await client.query('BEGIN'); await client.query(fs.readFileSync(path.join(__dirname, '..', 'migrations', '002_scorecard_details.sql'), 'utf8')); await client.query('COMMIT'); console.log('✅ Scorecard-details migration applied.'); } catch (error) { await client.query('ROLLBACK'); console.error('❌ Scorecard-details migration failed:', error.message); process.exitCode = 1; } finally { client.release(); await pool.end(); } })();

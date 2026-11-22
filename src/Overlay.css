@@ -50,59 +50,80 @@ body.obs-overlay-mode main {
   transform-origin: center;
 }
 
-/* ── Top Left: Tournament & LIVE ── */
+/* ── Top Left: Sponsor / Logo ── */
 .ov-top-left {
   position: absolute;
   top: 40px;
   left: 50px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
+}
+
+.ov-sponsor-area {
+  background: rgba(255, 255, 255, 0.92);
+  border: 2px solid rgba(255,255,255,0.3);
+  padding: 8px 12px;
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ov-logo-img {
+  height: 90px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.ov-sponsor-text {
+  font-size: 11px;
+  color: #94a3b8;
+  letter-spacing: 1px;
+  font-weight: 600;
+  display: block;
+}
+
+.ov-sponsor-placeholder {
+  font-family: 'Teko', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-top: 4px;
+}
+
+/* ── Top Center: Tournament Name ── */
+.ov-top-center {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .ov-tournament-name {
   background: rgba(10, 18, 30, 0.85);
   border: 1px solid rgba(255,255,255,0.1);
-  border-left: 4px solid #3b82f6; /* Blue accent */
-  padding: 8px 20px;
+  border-bottom: 4px solid #3b82f6;
+  padding: 10px 36px;
   font-family: 'Teko', sans-serif;
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   text-transform: uppercase;
-  border-radius: 4px 12px 12px 4px;
+  border-radius: 12px 12px 4px 4px;
   backdrop-filter: blur(10px);
   box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  white-space: nowrap;
 }
 
-.ov-live-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(220, 38, 38, 0.9);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: 1.5px;
-  width: fit-content;
-  box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
-}
-
-.ov-live-dot {
-  width: 10px;
-  height: 10px;
-  background-color: white;
-  border-radius: 50%;
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(0.8); }
-}
-
-/* ── Top Right: CRR & Sponsor ── */
+/* ── Top Right: LIVE Indicator ── */
 .ov-top-right {
   position: absolute;
   top: 40px;
@@ -112,29 +133,32 @@ body.obs-overlay-mode main {
   align-items: flex-end;
 }
 
-.ov-sponsor-area {
-  background: rgba(10, 18, 30, 0.85);
-  border: 1px solid rgba(255,255,255,0.1);
+.ov-live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(220, 38, 38, 0.9);
   padding: 10px 20px;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  text-align: right;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-}
-
-.ov-sponsor-text {
-  font-size: 11px;
-  color: #94a3b8;
-  letter-spacing: 1px;
-  font-weight: 600;
-}
-
-.ov-sponsor-placeholder {
+  border-radius: 10px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  width: fit-content;
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.6);
   font-family: 'Teko', sans-serif;
-  font-size: 28px;
-  font-weight: 700;
-  color: #e2e8f0;
-  margin-top: 4px;
+}
+
+.ov-live-dot {
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.8); }
 }
 
 /* ── Animated Banners (Four, Six, Wicket) ── */

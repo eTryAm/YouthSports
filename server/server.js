@@ -6,12 +6,30 @@ const http    = require('http');
 const { Server } = require('socket.io');
 const cors    = require('cors');
 const path    = require('path');
+const crypto  = require('crypto');
+const rateLimit = require('express-rate-limit');
+const { applyDelivery } = require('./scoring-engine');
 
 const {
   saveActiveMatch,
   loadActiveMatch,
   clearActiveMatch,
   createMatchRecord,
+  listTournaments,
+  getTournamentBySlug,
+  createTournament,
+  updateTournament,
+  getTournamentDirectory,
+  listTeams,
+  createTeam,
+  listPlayers,
+  createPlayer,
+  registerTournamentTeam,
+  registerTournamentPlayer,
+  listTournamentFixtures,
+  createFixture,
+  getFixtureForScoring,
+  markFixtureLive,
   archiveMatch,
   saveBallEvent,
   recordMatchParticipation,
@@ -36,7 +54,202 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
+const adminSessions = new Map();
+const ADMIN_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+const configuredAdminPin = process.env.ADMIN_PIN || (process.env.NODE_ENV !== 'production' ? '123456' : null);
+const validAdminSession = (token) => {
+  const expiresAt = adminSessions.get(token);
+  if (!expiresAt || expiresAt < Date.now()) {
+    if (token) adminSessions.delete(token);
+    return false;
+  }
+  return true;
+};
+const requireAdmin = (req, res, next) => {
+  const token = req.get('authorization')?.replace(/^Bearer\s+/i, '');
+  if (!validAdminSession(token)) return res.status(401).json({ error: 'Administrator authentication is required.' });
+  next();
+};
+const compareSecret = (left, right) => {
+  const leftBuffer = Buffer.from(left || '');
+  const rightBuffer = Buffer.from(right || '');
+  return leftBuffer.length === rightBuffer.length && crypto.timingSafeEqual(leftBuffer, rightBuffer);
+};
+
+const TOURNAMENT_FORMATS = new Set(['ROUND_ROBIN', 'KNOCKOUT', 'LEAGUE_PLAYOFFS', 'GROUP_KNOCKOUT']);
+const TOURNAMENT_STATUSES = new Set(['DRAFT', 'UPCOMING', 'REGISTRATION_OPEN', 'ONGOING', 'COMPLETED', 'ARCHIVED']);
+const slugify = (value) => String(value || '')
+  .toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+function parseTournamentPayload(body) {
+  const name = String(body.name || '').trim();
+  const slug = slugify(body.slug || name);
+  const oversPerInnings = Number.parseInt(body.oversPerInnings, 10);
+  const format = body.format || 'ROUND_ROBIN';
+  const status = body.status || 'DRAFT';
+  if (name.length < 3 || name.length > 160) throw new Error('Tournament name must contain 3–160 characters.');
+  if (!slug) throw new Error('A valid tournament URL slug is required.');
+  if (!Number.isInteger(oversPerInnings) || oversPerInnings < 1 || oversPerInnings > 100) {
+    throw new Error('Overs per innings must be between 1 and 100.');
+  }
+  if (!TOURNAMENT_FORMATS.has(format)) throw new Error('Unsupported tournament format.');
+  if (!TOURNAMENT_STATUSES.has(status)) throw new Error('Unsupported tournament status.');
+  return {
+    name, slug, description: String(body.description || '').trim(), startDate: body.startDate || null,
+    endDate: body.endDate || null, venues: Array.isArray(body.venues) ? body.venues.filter(Boolean) : [],
+    format, status, oversPerInnings,
+    pointsForWin: Number.isInteger(Number(body.pointsForWin)) ? Number(body.pointsForWin) : 2,
+    pointsForLoss: Number.isInteger(Number(body.pointsForLoss)) ? Number(body.pointsForLoss) : 0,
+    pointsForTie: Number.isInteger(Number(body.pointsForTie)) ? Number(body.pointsForTie) : 1,
+    pointsForNoResult: Number.isInteger(Number(body.pointsForNoResult)) ? Number(body.pointsForNoResult) : 1,
+    qualificationRules: body.qualificationRules && typeof body.qualificationRules === 'object' ? body.qualificationRules : {},
+    playingRules: body.playingRules && typeof body.playingRules === 'object' ? body.playingRules : {},
+    isPublished: Boolean(body.isPublished),
+  };
+}
+
+function parseEntityPayload(body, type) {
+  const name = String(type === 'TEAM' ? body.name || '' : body.fullName || '').trim();
+  const slug = slugify(body.slug || name);
+  if (name.length < 2 || name.length > 140 || !slug) throw new Error(`A valid ${type.toLowerCase()} name is required.`);
+  if (type === 'TEAM') return { name, slug, abbreviation: String(body.abbreviation || '').trim().slice(0, 10), description: String(body.description || '').trim(), logoUrl: body.logoUrl || null };
+  const validRoles = new Set(['BATTER', 'BOWLER', 'ALL_ROUNDER', 'WICKETKEEPER']);
+  if (body.playingRole && !validRoles.has(body.playingRole)) throw new Error('Unsupported playing role.');
+  return { fullName: name, slug, photoUrl: body.photoUrl || null, dateOfBirth: body.dateOfBirth || null,
+    battingStyle: body.battingStyle || null, bowlingStyle: body.bowlingStyle || null,
+    playingRole: body.playingRole || null, bio: String(body.bio || '').trim() };
+}
+
 app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
+app.post('/api/auth/admin-session', rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false }), (req, res) => {
+  if (!configuredAdminPin) return res.status(503).json({ error: 'ADMIN_PIN is not configured on the server.' });
+  if (!compareSecret(String(req.body?.pin || ''), configuredAdminPin)) return res.status(401).json({ error: 'Incorrect PIN.' });
+  const token = crypto.randomBytes(32).toString('base64url');
+  const expiresAt = Date.now() + ADMIN_SESSION_TTL_MS;
+  adminSessions.set(token, expiresAt);
+  res.json({ token, expiresAt, role: 'SUPER_ADMIN' });
+});
+
+// ─── TOURNAMENT API ────────────────────────────────────────────────────────
+// Public reads return published tournaments only. The administrative endpoints
+// are deliberately separate while server-side role middleware is introduced.
+app.get('/api/tournaments', async (req, res) => {
+  try { res.json(await listTournaments({ publishedOnly: true })); }
+  catch (error) { res.status(500).json({ error: 'Unable to load tournaments.' }); }
+});
+
+app.get('/api/admin/tournaments', requireAdmin, async (_req, res) => {
+  try { res.json(await listTournaments()); }
+  catch (error) { res.status(500).json({ error: 'Unable to load tournaments.' }); }
+});
+
+app.get('/api/admin/tournaments/:slug', requireAdmin, async (req, res) => {
+  try {
+    const tournament = await getTournamentBySlug(req.params.slug);
+    if (!tournament) return res.status(404).json({ error: 'Tournament not found.' });
+    res.json({ ...tournament, ...(await getTournamentDirectory(tournament.id)) });
+  } catch { res.status(500).json({ error: 'Unable to load the tournament.' }); }
+});
+
+app.get('/api/tournaments/:slug', async (req, res) => {
+  try {
+    const tournament = await getTournamentBySlug(req.params.slug, { publishedOnly: true });
+    if (!tournament) return res.status(404).json({ error: 'Tournament not found.' });
+    const directory = await getTournamentDirectory(tournament.id);
+    res.json({ ...tournament, ...directory });
+  } catch (error) {
+    res.status(500).json({ error: 'Unable to load the tournament.' });
+  }
+});
+
+app.post('/api/admin/tournaments', requireAdmin, async (req, res) => {
+  try {
+    const tournament = await createTournament(parseTournamentPayload(req.body));
+    res.status(201).json(tournament);
+  } catch (error) {
+    const duplicate = error.code === '23505';
+    res.status(duplicate ? 409 : 400).json({ error: duplicate ? 'That tournament name or URL slug is already in use.' : error.message });
+  }
+});
+
+app.put('/api/admin/tournaments/:id', requireAdmin, async (req, res) => {
+  try {
+    const tournament = await updateTournament(Number(req.params.id), parseTournamentPayload(req.body));
+    if (!tournament) return res.status(404).json({ error: 'Tournament not found.' });
+    res.json(tournament);
+  } catch (error) {
+    res.status(error.code === '23505' ? 409 : 400).json({ error: error.code === '23505' ? 'That tournament name or URL slug is already in use.' : error.message });
+  }
+});
+
+app.get('/api/teams', async (_req, res) => {
+  try { res.json(await listTeams()); }
+  catch { res.status(500).json({ error: 'Unable to load teams.' }); }
+});
+app.post('/api/admin/teams', requireAdmin, async (req, res) => {
+  try { res.status(201).json(await createTeam(parseEntityPayload(req.body, 'TEAM'))); }
+  catch (error) { res.status(error.code === '23505' ? 409 : 400).json({ error: error.code === '23505' ? 'That team name or slug already exists.' : error.message }); }
+});
+app.get('/api/players', async (_req, res) => {
+  try { res.json(await listPlayers()); }
+  catch { res.status(500).json({ error: 'Unable to load players.' }); }
+});
+app.post('/api/admin/players', requireAdmin, async (req, res) => {
+  try { res.status(201).json(await createPlayer(parseEntityPayload(req.body, 'PLAYER'))); }
+  catch (error) { res.status(error.code === '23505' ? 409 : 400).json({ error: error.code === '23505' ? 'That player URL slug already exists.' : error.message }); }
+});
+app.post('/api/admin/tournaments/:id/teams/:teamId', requireAdmin, async (req, res) => {
+  try { res.status(201).json(await registerTournamentTeam(Number(req.params.id), Number(req.params.teamId), req.body)); }
+  catch (error) { res.status(400).json({ error: error.message }); }
+});
+app.post('/api/admin/tournaments/:id/players/:playerId', requireAdmin, async (req, res) => {
+  try { res.status(201).json(await registerTournamentPlayer(Number(req.params.id), Number(req.params.playerId), req.body)); }
+  catch (error) { res.status(400).json({ error: error.message }); }
+});
+app.get('/api/tournaments/:slug/fixtures', async (req, res) => {
+  try {
+    const tournament = await getTournamentBySlug(req.params.slug, { publishedOnly: true });
+    if (!tournament) return res.status(404).json({ error: 'Tournament not found.' });
+    res.json(await listTournamentFixtures(tournament.id, { publishedOnly: true }));
+  } catch { res.status(500).json({ error: 'Unable to load fixtures.' }); }
+});
+app.get('/api/admin/tournaments/:slug/fixtures', requireAdmin, async (req, res) => {
+  try {
+    const tournament = await getTournamentBySlug(req.params.slug);
+    if (!tournament) return res.status(404).json({ error: 'Tournament not found.' });
+    res.json(await listTournamentFixtures(tournament.id));
+  } catch { res.status(500).json({ error: 'Unable to load fixtures.' }); }
+});
+app.post('/api/admin/tournaments/:id/fixtures', requireAdmin, async (req, res) => {
+  try {
+    const { team1Id, team2Id } = req.body;
+    const maxOvers = Number.parseInt(req.body.maxOvers, 10);
+    if (!Number.isInteger(Number(team1Id)) || !Number.isInteger(Number(team2Id)) || Number(team1Id) === Number(team2Id)) throw new Error('Choose two different registered teams.');
+    if (!Number.isInteger(maxOvers) || maxOvers < 1 || maxOvers > 100) throw new Error('Overs must be between 1 and 100.');
+    res.status(201).json(await createFixture({ tournamentId: Number(req.params.id), team1Id: Number(team1Id), team2Id: Number(team2Id), maxOvers,
+      matchNumber: String(req.body.matchNumber || '').trim(), venue: String(req.body.venue || '').trim(), scheduledAt: req.body.scheduledAt || null, isPublished: Boolean(req.body.isPublished) }));
+  } catch (error) { res.status(400).json({ error: error.message }); }
+});
+
+app.post('/api/admin/fixtures/:id/start-scoring', requireAdmin, async (req, res) => {
+  try {
+    const fixture = await getFixtureForScoring(Number(req.params.id));
+    if (!fixture) return res.status(404).json({ error: 'Fixture not found.' });
+    if (matchState.status === 'live') return res.status(409).json({ error: 'Finish or reset the current live match before starting another fixture.' });
+    matchState = {
+      ...createMatchState(),
+      status: 'live', dbMatchId: fixture.id, fixtureId: fixture.id, tournamentId: fixture.tournamentId,
+      team1Id: fixture.team1Id, team2Id: fixture.team2Id, team1Name: fixture.team1Name,
+      team2Name: fixture.team2Name, maxOvers: fixture.maxOvers,
+      players: fixture.team1Players.map((player) => ({ id: player.id, name: player.name, runs: 0, balls: 0, fours: 0, sixes: 0, status: 'yet_to_bat' })),
+      bowlers: fixture.team2Players.map((player) => ({ id: player.id, name: player.name, ballsBowled: 0, runsConceded: 0, wickets: 0 })),
+    };
+    await markFixtureLive(fixture.id);
+    broadcast();
+    res.json({ success: true, matchId: fixture.id });
+  } catch (error) { res.status(400).json({ error: error.message }); }
+});
 
 const server = http.createServer(app);
 const io     = new Server(server, { cors: { origin: allowedOrigins } });
@@ -59,7 +272,7 @@ const createMatchState = () => ({
   totalRuns        : 0,
   wickets          : 0,
   legalBalls       : 0,
-  extras           : { wides: 0, noBalls: 0 },
+  extras           : { wides: 0, noBalls: 0, byes: 0, legByes: 0, penalty: 0 },
   players          : [],
   bowlers          : [],
   strikerId        : null,
@@ -72,6 +285,8 @@ const createMatchState = () => ({
   allOut           : false,
   lastBall         : null,
   lastAction       : '',
+  undoStack        : [],
+  auditTrail       : [],
 });
 
 let matchState = createMatchState();
@@ -82,7 +297,7 @@ const nextId = () => _nextId++;
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 const getOverStr = () => {
-  const legal = matchState.currentOverBalls.filter(b => b !== 'Wd' && b !== 'Nb').length;
+  const legal = matchState.currentOverBalls.filter(b => !String(b).startsWith('Wd') && !String(b).startsWith('Nb')).length;
   return `${matchState.overHistory.length}.${legal}`;
 };
 
@@ -92,7 +307,7 @@ const rotateStrike = () => {
 };
 
 const legalInCurrentOver = () =>
-  matchState.currentOverBalls.filter(b => b !== 'Wd' && b !== 'Nb').length;
+  matchState.currentOverBalls.filter(b => !String(b).startsWith('Wd') && !String(b).startsWith('Nb')).length;
 
 const isAllOut = () => {
   const maxWickets = Math.min(matchState.players.length - 1, 10);
@@ -130,7 +345,7 @@ function calcResult() {
 // ─────────────────────────────────────────────────────────────────────────────
 // BALL PROCESSING
 // ─────────────────────────────────────────────────────────────────────────────
-function processBall(type) {
+function processBall(input) {
   const s = matchState;
   if (s.status !== 'live')              return 'Match is not live.';
   if (s.allOut)                         return 'Innings is over — all out or over limit reached.';
@@ -143,69 +358,50 @@ function processBall(type) {
   const bowler  = s.bowlers.find(b => b.id === s.currentBowlerId);
   if (!striker || !bowler) return 'Invalid player or bowler selection.';
 
-  s.lastBall = type;
+  // Keep a bounded, in-memory recovery point for the active match. The full
+  // pre-change state remains in the audit trail instead of being overwritten.
+  const recoveryPoint = JSON.parse(JSON.stringify({ ...s, undoStack: [], auditTrail: [] }));
+  s.undoStack = [...(s.undoStack || []), recoveryPoint].slice(-30);
+
+  s.lastBall = typeof input === 'string' ? input : input?.kind;
   const overNum    = s.overHistory.length;
   const ballInOver = legalInCurrentOver() + 1;
+  let outcome;
+  try { outcome = applyDelivery(s, input, { striker, bowler }); }
+  catch (error) { return error.message; }
+  s.currentOverBalls.push(outcome.label);
+  saveBallEvent(s.dbMatchId, s.currentInning, overNum, ballInOver, outcome.label, striker.name, bowler.name, outcome.totalRuns);
+  s.auditTrail = [...(s.auditTrail || []), {
+    at: new Date().toISOString(), action: 'DELIVERY_ADDED', event: outcome.event,
+    label: outcome.label, scoreAfter: `${s.totalRuns}/${s.wickets}`,
+  }].slice(-200);
 
-  // ── WIDE ──────────────────────────────────────────────────────────────────
-  if (type === 'Wd') {
-    s.totalRuns += 1; s.extras.wides += 1; bowler.runsConceded += 1;
-    s.currentOverBalls.push('Wd');
-    s.lastAction = 'Wide · +1';
-    saveBallEvent(s.dbMatchId, s.currentInning, overNum, ballInOver, 'Wd', striker.name, bowler.name, 1);
-    return null;
-  }
-
-  // ── NO BALL ───────────────────────────────────────────────────────────────
-  if (type === 'Nb') {
-    s.totalRuns += 1; s.extras.noBalls += 1; bowler.runsConceded += 1;
-    s.currentOverBalls.push('Nb');
-    s.lastAction = 'No Ball · +1';
-    saveBallEvent(s.dbMatchId, s.currentInning, overNum, ballInOver, 'Nb', striker.name, bowler.name, 1);
-    return null;
-  }
-
-  // ── WICKET ────────────────────────────────────────────────────────────────
-  if (type === 'W') {
-    s.wickets += 1; s.legalBalls += 1;
-    striker.status = 'out';
-    bowler.wickets += 1; bowler.ballsBowled += 1;
-    s.currentOverBalls.push('W');
+  if (outcome.wicket) {
     s.fallOfWickets.push({ wicketNum: s.wickets, score: s.totalRuns, over: getOverStr(), playerName: striker.name });
-    saveBallEvent(s.dbMatchId, s.currentInning, overNum, ballInOver, 'W', striker.name, bowler.name, 0);
-
     if (isAllOut()) {
       s.allOut = true; s.lastAction = `OUT! ${striker.name} · All Out!`;
       s.strikerId = null; s.waitingForBatsman = false;
     } else {
       s.lastAction = `OUT! ${striker.name}`; s.strikerId = null; s.waitingForBatsman = true;
     }
-
-  // ── RUNS ──────────────────────────────────────────────────────────────────
   } else {
-    const runs = parseInt(type) || 0;
-    s.totalRuns += runs; striker.runs += runs; striker.balls += 1;
-    if (runs === 4) striker.fours += 1;
-    if (runs === 6) striker.sixes += 1;
-    bowler.runsConceded += runs; bowler.ballsBowled += 1; s.legalBalls += 1;
-    s.currentOverBalls.push(String(runs));
+    if (outcome.rotateStrike) rotateStrike();
+    if (outcome.event.kind === 'WIDE') s.lastAction = `Wide · +${outcome.totalRuns}`;
+    else if (outcome.event.kind === 'NO_BALL') s.lastAction = `No ball · +${outcome.totalRuns}`;
+    else if (outcome.event.kind === 'BYE') s.lastAction = `Bye · +${outcome.totalRuns}`;
+    else if (outcome.event.kind === 'LEG_BYE') s.lastAction = `Leg bye · +${outcome.totalRuns}`;
+    else if (outcome.event.batterRuns === 6) s.lastAction = '💥 SIX!';
+    else if (outcome.event.batterRuns === 4) s.lastAction = '🔥 FOUR!';
+    else if (outcome.totalRuns === 0) s.lastAction = 'Dot ball';
+    else s.lastAction = `${outcome.totalRuns} run${outcome.totalRuns !== 1 ? 's' : ''}`;
+  }
 
-    saveBallEvent(s.dbMatchId, s.currentInning, overNum, ballInOver, String(runs), striker.name, bowler.name, runs);
-
-    if      (runs === 6) s.lastAction = '💥 SIX!';
-    else if (runs === 4) s.lastAction = '🔥 FOUR!';
-    else if (runs === 0) s.lastAction = 'Dot ball';
-    else                 s.lastAction = `${runs} run${runs !== 1 ? 's' : ''}`;
-
-    if (runs % 2 === 1) rotateStrike();
-
-    if (s.currentInning === 2 && s.target !== null && s.totalRuns >= s.target) {
-      s.targetReached = true; s.lastAction += ' · 🏆 Target Reached!';
-    }
+  if (s.currentInning === 2 && s.target !== null && s.totalRuns >= s.target) {
+    s.targetReached = true; s.lastAction += ' · 🏆 Target Reached!';
   }
 
   // ── OVER COMPLETE ─────────────────────────────────────────────────────────
-  if (type !== 'Wd' && type !== 'Nb') {
+  if (outcome.legal) {
     if (legalInCurrentOver() >= 6) {
       s.overHistory.push([...s.currentOverBalls]);
       s.currentOverBalls = []; s.currentBowlerId = null;
@@ -287,7 +483,7 @@ app.get('/api/tournament/standings', async (_req, res) => {
 });
 
 // ─── ADMIN STANDINGS MANAGEMENT ──────────────────────────────────────────────
-app.get('/api/admin/standings', async (_req, res) => {
+app.get('/api/admin/standings', requireAdmin, async (_req, res) => {
   try {
     const data = await getAdminStandings();
     res.json(data);
@@ -297,7 +493,7 @@ app.get('/api/admin/standings', async (_req, res) => {
   }
 });
 
-app.post('/api/admin/standings/draft', async (req, res) => {
+app.post('/api/admin/standings/draft', requireAdmin, async (req, res) => {
   try {
     const { standings } = req.body;
     if (!standings || !Array.isArray(standings)) {
@@ -311,7 +507,7 @@ app.post('/api/admin/standings/draft', async (req, res) => {
   }
 });
 
-app.post('/api/admin/standings/publish', async (req, res) => {
+app.post('/api/admin/standings/publish', requireAdmin, async (req, res) => {
   try {
     await publishStandings('Admin');
     io.emit('pointsTableUpdated');
@@ -328,6 +524,17 @@ app.post('/api/admin/standings/publish', async (req, res) => {
 io.on('connection', (socket) => {
   console.log('✅ Client connected:', socket.id);
   socket.emit('matchState', matchState);
+
+  // Spectators may subscribe to live state, but every mutation requires the
+  // server-issued administrator session attached during the Socket.IO handshake.
+  socket.use((packet, next) => {
+    if (packet[0] === 'requestState') return next();
+    if (!validAdminSession(socket.handshake.auth?.token)) {
+      socket.emit('ballError', 'Administrator authentication is required.');
+      return next(new Error('Administrator authentication is required.'));
+    }
+    return next();
+  });
 
   socket.on('requestState', () => socket.emit('matchState', matchState));
 
@@ -395,7 +602,7 @@ io.on('connection', (socket) => {
     matchState.totalRuns        = 0;
     matchState.wickets          = 0;
     matchState.legalBalls       = 0;
-    matchState.extras           = { wides: 0, noBalls: 0 };
+    matchState.extras           = { wides: 0, noBalls: 0, byes: 0, legByes: 0, penalty: 0 };
     matchState.strikerId        = null;
     matchState.nonStrikerId     = null;
     matchState.currentBowlerId  = null;
@@ -487,10 +694,21 @@ io.on('connection', (socket) => {
   });
 
   // ── BALL ──────────────────────────────────────────────────────────────────
-  socket.on('addBall', ({ type }) => {
-    const error = processBall(type);
+  socket.on('addBall', (payload) => {
+    const error = processBall(payload?.event || payload?.type);
     if (error) socket.emit('ballError', error);
     else       broadcast();
+  });
+
+  socket.on('undoLastDelivery', () => {
+    const stack = matchState.undoStack || [];
+    if (!stack.length) return socket.emit('ballError', 'There is no delivery to undo.');
+    const previous = stack[stack.length - 1];
+    const auditTrail = [...(matchState.auditTrail || []), {
+      at: new Date().toISOString(), action: 'DELIVERY_UNDONE', scoreBefore: `${matchState.totalRuns}/${matchState.wickets}`,
+    }].slice(-200);
+    matchState = { ...previous, undoStack: stack.slice(0, -1), auditTrail };
+    broadcast();
   });
 
   socket.on('disconnect', () => console.log('❌ Disconnected:', socket.id));

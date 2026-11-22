@@ -15,3 +15,11 @@ export const socket = io(WS_URL, {
   reconnectionAttempts   : Infinity,
   transports             : ["websocket", "polling"],
 });
+
+export function authenticateSocket(token) {
+  socket.auth = { token };
+  if (socket.connected) {
+    socket.disconnect();
+    socket.connect();
+  }
+}

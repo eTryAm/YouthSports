@@ -20,26 +20,22 @@ async function inspect() {
   funcs.rows.forEach(r => console.log('  -', r.routine_name));
 
   console.log('\n=== ROW COUNTS ===');
-  for (const t of ['active_match','matches','player_stats','team_stats','match_balls','points_table']) {
+  for (const t of ['active_match','matches','tournaments','teams','players','tournament_teams','tournament_players','innings','deliveries','player_stats','team_stats','match_balls','tournament_standings']) {
     try {
       const r = await pool.query('SELECT COUNT(*) FROM ' + t);
       console.log('  -', t + ':', r.rows[0].count, 'rows');
     } catch(e) { console.log('  -', t + ': N/A'); }
   }
 
-  const pts = await pool.query('SELECT * FROM points_table_view');
-  console.log('\n=== POINTS TABLE CURRENT DATA ===');
-  console.log(JSON.stringify(pts.rows, null, 2));
-
-  // Show points_table column structure
-  const cols = await pool.query(`
-    SELECT column_name, data_type, column_default
-    FROM information_schema.columns
-    WHERE table_name = 'points_table' AND table_schema = 'public'
-    ORDER BY ordinal_position
-  `);
-  console.log('\n=== POINTS TABLE COLUMNS ===');
-  cols.rows.forEach(r => console.log(`  ${r.column_name}: ${r.data_type} (default: ${r.column_default})`));
+  const legacyPoints = await pool.query(`SELECT to_regclass('public.points_table_view') AS name`);
+  if (legacyPoints.rows[0].name) {
+    const pts = await pool.query('SELECT * FROM points_table_view');
+    console.log('\n=== LEGACY POINTS TABLE CURRENT DATA ===');
+    console.log(JSON.stringify(pts.rows, null, 2));
+  } else {
+    console.log('\n=== POINTS TABLE ===');
+    console.log('  Legacy points_table_view is not installed; use tournament_standings during the transition.');
+  }
 
   await pool.end();
 }

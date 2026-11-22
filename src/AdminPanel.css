@@ -286,6 +286,7 @@
 }
 .ap-ball-info strong { color: #e2e8f0; }
 .ap-ball-info .sep { color: #334155; }
+.ap-dismissal-picker { display: flex; align-items: center; gap: 8px; margin: -4px 0 14px; color: #94a3b8; font-size: 12px; font-weight: 700; }.ap-dismissal-picker .ap-select { width: auto; flex: 1; max-width: 220px; padding: 8px 10px; }
 
 .ap-ball-grid {
   display: flex;
@@ -319,10 +320,13 @@
 .ap-ball-btn.type-2  { background: #0369a1; }
 .ap-ball-btn.type-3  { background: #7c3aed; }
 .ap-ball-btn.type-4  { background: #16a34a; box-shadow: 0 6px 24px rgba(22,163,74,.35); }
+.ap-ball-btn.type-5  { background: #a16207; box-shadow: 0 6px 24px rgba(202,138,4,.28); }
 .ap-ball-btn.type-6  { background: #92400e; box-shadow: 0 6px 24px rgba(251,191,36,.35); color: #fde68a; }
 .ap-ball-btn.type-W  { background: #dc2626; box-shadow: 0 6px 24px rgba(220,38,38,.35); }
 .ap-ball-btn.type-Wd { background: #c2410c; }
 .ap-ball-btn.type-Nb { background: #c2410c; }
+.ap-ball-btn.type-By { background: #0f766e; }
+.ap-ball-btn.type-Lb { background: #155e75; font-size: 18px; }
 
 /* label */
 .ap-label {
@@ -467,3 +471,165 @@
   color: #64748b;
   margin-bottom: 16px;
 }
+
+/* ── LIVE SCORING: touch-first controls ─────────────────────────────── */
+.ap-live-score {
+  position: sticky;
+  top: 72px;
+  z-index: 20;
+  background: rgba(15,23,42,.96);
+  box-shadow: 0 10px 22px rgba(2,8,23,.28);
+}
+
+.ap-mobile-player-pickers { display: none; }
+
+.ap-scoring-pad {
+  border-color: rgba(34,197,94,.34);
+  background: linear-gradient(180deg, rgba(20,83,45,.16), rgba(15,23,42,.92));
+}
+.ap-scoring-pad-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ap-scoring-pad-heading h3 { margin: 0; }
+.ap-scoring-actions { display: flex; align-items: center; gap: 8px; }.ap-undo-btn { min-height: 32px; padding: 5px 9px; color: #cbd5e1; background: rgba(148,163,184,.1); border: 1px solid #475569; border-radius: 8px; font: 700 12px 'Inter', sans-serif; cursor: pointer; }.ap-undo-btn:disabled { opacity: .4; cursor: not-allowed; }
+.ap-tap-hint {
+  padding: 4px 8px;
+  border: 1px solid rgba(148,163,184,.22);
+  border-radius: 999px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+}
+.ap-live-squads {
+  margin: 18px 0;
+  border-top: 1px solid #1e293b;
+  padding-top: 12px;
+}
+.ap-live-squads summary {
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 2px 14px;
+}
+.ap-live-squads[open] summary { color: #4ade80; }
+
+@media (max-width: 720px) {
+  .ap-wrap { padding-bottom: calc(36px + env(safe-area-inset-bottom)); }
+  .ap-title { font-size: 21px; margin-bottom: 12px; }
+  .ap-card { border-radius: 14px; padding: 15px; margin-bottom: 10px; }
+  .ap-control-bar { gap: 8px; }
+  .ap-control-bar .btn { flex: 1 1 auto; min-height: 44px; }
+  .ap-status { width: 100%; text-align: center; padding: 8px 10px; }
+
+  /* Keep the live score in view while a scorer moves through the controls. */
+  .ap-live-score {
+    top: 59px;
+    margin-inline: -2px;
+    padding-block: 12px;
+  }
+  .ap-live-score .ap-scoreline { font-size: 38px; }
+  .ap-live-score .ap-meta-mini { margin-bottom: 0; }
+  .ib-chase-mini { margin-top: 7px; padding-top: 7px; font-size: 12px; }
+
+  /* Native selectors are awkward with a thumb. Use clear tap targets instead. */
+  .ap-player-selectors { display: none; }
+  .ap-mobile-player-pickers { display: block; }
+  .ap-mobile-player-pickers summary {
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .ap-mobile-player-pickers[open] summary { margin-bottom: 14px; color: #4ade80; }
+  .ap-picker-group + .ap-picker-group { margin-top: 15px; }
+  .ap-picker-group h4 { color: #94a3b8; margin-bottom: 8px; }
+  .ap-picker-options { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ap-picker-btn {
+    appearance: none;
+    min-height: 44px;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,.03);
+    color: #cbd5e1;
+    font: 600 13px/1.15 'Inter', sans-serif;
+    text-align: left;
+    cursor: pointer;
+  }
+  .ap-picker-btn:active { transform: scale(.98); }
+  .ap-picker-btn.is-selected {
+    background: rgba(34,197,94,.16);
+    border-color: #22c55e;
+    color: #bbf7d0;
+  }
+  .ap-bowler-picker.is-selected {
+    background: rgba(99,102,241,.18);
+    border-color: #818cf8;
+    color: #c7d2fe;
+  }
+
+  .ap-current-over { padding-block: 13px; }
+  .ap-over-title { display: flex; justify-content: space-between; font-size: 12px; }
+  .ap-over-row { gap: 7px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .ap-ball { width: 34px; height: 34px; }
+
+  .ap-ball-info { margin-bottom: 14px; padding: 9px 10px; font-size: 13px; }
+  .ap-ball-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .ap-ball-btn,
+  .ap-ball-btn.size-normal,
+  .ap-ball-btn.size-big {
+    width: 100%;
+    height: 64px;
+    min-width: 0;
+    border-radius: 14px;
+    font-size: 24px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.28);
+  }
+  .ap-ball-btn.type-Wd,
+  .ap-ball-btn.type-Nb { font-size: 18px; }
+  .ap-ball-btn.type-W { font-size: 23px; }
+  .ap-ball-btn:hover { transform: none; }
+  .ap-ball-btn:active { transform: scale(.96); }
+  .ap-ball-btn:focus-visible,
+  .ap-picker-btn:focus-visible,
+  .btn:focus-visible { outline: 3px solid #fbbf24; outline-offset: 2px; }
+
+  .ap-toast {
+    top: auto;
+    right: 12px;
+    left: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    text-align: center;
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 390px) {
+  .ap-ball-grid { gap: 8px; }
+  .ap-ball-btn,
+  .ap-ball-btn.size-normal,
+  .ap-ball-btn.size-big { height: 58px; }
+  .ap-picker-btn { padding-inline: 10px; }
+}
+
+/* ── TOURNAMENT MANAGEMENT ─────────────────────────────────────────── */
+.ap-manager-copy { color: #94a3b8; font-size: 13px; line-height: 1.5; margin: -4px 0 16px; }
+.ap-manager-message { color: #bbf7d0; padding: 9px 11px; border: 1px solid rgba(34,197,94,.25); border-radius: 9px; background: rgba(34,197,94,.07); font-size: 13px; margin-bottom: 14px; }
+.ap-manager-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ap-manager-form label > span { display: block; color: #94a3b8; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.ap-manager-wide, .ap-manager-actions { grid-column: 1 / -1; }.ap-manager-publish { color: #cbd5e1; font-size: 13px; }.ap-manager-publish input { margin-right: 8px; accent-color: #22c55e; }.ap-manager-actions { display: flex; gap: 8px; }.ap-manager-list { margin-top: 18px; display: grid; gap: 7px; }.ap-manager-item { display: flex; justify-content: space-between; gap: 12px; align-items: center; width: 100%; padding: 11px 12px; color: #cbd5e1; background: rgba(255,255,255,.02); border: 1px solid #1e293b; border-radius: 10px; text-align: left; cursor: pointer; font-family: inherit; }.ap-manager-item:hover { border-color: #4ade80; }.ap-manager-item strong, .ap-manager-item small { display: block; }.ap-manager-item small { margin-top: 3px; color: #64748b; font-size: 11px; }
+@media (max-width: 720px) { .ap-manager-form { grid-template-columns: 1fr; }.ap-manager-wide, .ap-manager-actions { grid-column: auto; }.ap-manager-item { min-height: 52px; } }
+
+.ap-roster-tournament { display: block; max-width: 420px; margin-bottom: 14px; }.ap-roster-tournament span, .ap-roster-create label span { display: block; color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }.ap-roster-create { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }.ap-roster-create form { display: flex; align-items: end; gap: 8px; }.ap-roster-create form label { flex: 1; }.ap-roster-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 18px; }.ap-roster-lists article { max-height: 280px; overflow: auto; }.ap-roster-lists h4 { margin-bottom: 8px; }.ap-roster-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 44px; padding: 7px 0; border-bottom: 1px solid rgba(51,65,85,.6); color: #cbd5e1; font-size: 13px; }.ap-roster-row small { display: block; color: #64748b; font-size: 10px; margin-top: 2px; text-transform: capitalize; }
+@media (max-width: 720px) { .ap-roster-create, .ap-roster-lists { grid-template-columns: 1fr; }.ap-roster-create form { flex-wrap: wrap; }.ap-roster-create form .ap-select { flex: 1 1 120px; }.ap-roster-create form .btn { min-height: 42px; } }
+.ap-fixture-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }.ap-fixture-form label > span { display: block; color: #94a3b8; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }.ap-fixture-form .ap-manager-publish { align-self: end; }.ap-fixture-list { display: grid; gap: 7px; margin-top: 18px; }.ap-fixture-list div { display: flex; justify-content: space-between; gap: 12px; padding: 10px; border: 1px solid #1e293b; border-radius: 9px; color: #cbd5e1; font-size: 13px; }.ap-fixture-list span { color: #64748b; font-size: 12px; }@media (max-width: 720px) { .ap-fixture-form { grid-template-columns: 1fr; }.ap-fixture-form .btn { min-height: 44px; } }

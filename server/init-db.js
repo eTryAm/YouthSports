@@ -40,6 +40,16 @@ async function init() {
 
   const sql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   await db.query(sql);
+  const multiTournamentMigration = fs.readFileSync(
+    path.join(__dirname, 'migrations', '001_multi_tournament.sql'),
+    'utf8'
+  );
+  await db.query(multiTournamentMigration);
+  const scorecardMigration = fs.readFileSync(
+    path.join(__dirname, 'migrations', '002_scorecard_details.sql'),
+    'utf8'
+  );
+  await db.query(scorecardMigration);
   console.log('✅ Schema applied (tables, stored functions, views)');
 
   await db.end();

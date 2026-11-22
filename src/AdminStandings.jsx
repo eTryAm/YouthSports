@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { adminHeaders } from './auth.js';
 import './AdminPanel.css'; // Reuse existing admin styles
 
 export default function AdminStandings() {
@@ -17,7 +18,7 @@ export default function AdminStandings() {
     setLoading(true);
     try {
       const apiUrl = `${import.meta.env.VITE_API_URL || ''}/api/admin/standings`;
-      const res = await fetch(apiUrl);
+      const res = await fetch(apiUrl, { headers: adminHeaders() });
       if (!res.ok) throw new Error('Failed to fetch admin standings');
       const data = await res.json();
       setStandings(data);
@@ -86,7 +87,7 @@ export default function AdminStandings() {
       const apiUrl = `${import.meta.env.VITE_API_URL || ''}/api/admin/standings/draft`;
       const res = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...adminHeaders() },
         body: JSON.stringify({ standings: validatedStandings })
       });
 
@@ -107,7 +108,7 @@ export default function AdminStandings() {
     setPublishing(true);
     try {
       const apiUrl = `${import.meta.env.VITE_API_URL || ''}/api/admin/standings/publish`;
-      const res = await fetch(apiUrl, { method: 'POST' });
+      const res = await fetch(apiUrl, { method: 'POST', headers: adminHeaders() });
       if (!res.ok) throw new Error('Failed to publish standings');
       
       showMessage('Final standings published to public table!', 'success');

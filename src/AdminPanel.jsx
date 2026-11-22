@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
-import { socket } from "./socket.js";
+import { socket, authenticateSocket } from "./socket.js";
+import { setAdminToken } from "./auth.js";
 import AdminStandings from "./AdminStandings.jsx";
+import TournamentManager from "./TournamentManager.jsx";
+import RosterManager from "./RosterManager.jsx";
+import FixtureManager from "./FixtureManager.jsx";
 import "./AdminPanel.css";
 
 const BALL_BTNS = [
@@ -9,10 +13,13 @@ const BALL_BTNS = [
   { type: "2",  label: "2",  size: "normal" },
   { type: "3",  label: "3",  size: "normal" },
   { type: "4",  label: "4",  size: "big"    },
+  { type: "5",  label: "5",  size: "normal" },
   { type: "6",  label: "6",  size: "big"    },
   { type: "W",  label: "W",  size: "big"    },
   { type: "Wd", label: "Wd", size: "normal" },
   { type: "Nb", label: "Nb", size: "normal" },
+  { type: "By", label: "Bye", size: "normal" },
+  { type: "Lb", label: "Leg bye", size: "normal" },
 ];
 
 export default function AdminPanel() {
@@ -26,12 +33,15 @@ export default function AdminPanel() {
   const [ptUpdated, setPtUpdated]   = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [pin, setPin]               = useState("");
+  const [isScoring, setIsScoring]   = useState(false);
+  const [dismissalType, setDismissalType] = useState("BOWLED");
 
   useEffect(() => {
     const onConnect    = () => { setConnected(true); socket.emit("requestState"); };
     const onDisconnect = () => setConnected(false);
     const onMatchState = (data) => {
       setMatch(data);
+      setIsScoring(false);
       setCfg(prev => ({
         team1Name: prev.team1Name || data.team1Name,
         team2Name: prev.team2Name || data.team2Name,
@@ -60,7 +70,13 @@ export default function AdminPanel() {
   const showToast = (msg, cls = "") => { setToast({ msg, cls }); setTimeout(() => setToast(null), 1800); };
 
   const addBall = (type) => {
-    socket.emit("addBall", { type });
+    // Ignore rapid repeat taps while the scorer waits for the socket update.
+    // This is especially helpful when the control is used one-handed on a phone.
+    if (isScoring) return;
+    setIsScoring(true);
+    socket.emit("addBall", type === "W" ? { event: { kind: "WICKET", dismissalType } } : { type });
+    if (navigator.vibrate) navigator.vibrate(12);
+    window.setTimeout(() => setIsScoring(false), 250);
     if (type === "4") showToast("🔥 FOUR!", "toast-four");
     if (type === "6") showToast("💥 SIX!",  "toast-six");
     if (type === "W") showToast("🚨 WICKET!", "toast-wicket");
@@ -95,12 +111,19 @@ export default function AdminPanel() {
 
   if (!match) return <div className="ap-wrap"><p style={{ textAlign:"center", padding:60, color:"#64748b" }}>Loading…</p></div>;
 
-  const handleLogin = () => {
-    const adminPin = import.meta.env.VITE_ADMIN_PIN || "123456";
-    if (pin === adminPin) {
+  const handleLogin = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/auth/admin-session`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin }),
+      });
+      const session = await response.json();
+      if (!response.ok) throw new Error(session.error || 'Incorrect PIN');
+      setAdminToken(session.token);
+      authenticateSocket(session.token);
       setIsAuthenticated(true);
-    } else {
-      showToast("❌ Incorrect PIN", "toast-wicket");
+      setPin("");
+    } catch (loginError) {
+      showToast(`❌ ${loginError.message}`, "toast-wicket");
       setPin("");
     }
   };
@@ -366,40 +389,8 @@ export default function AdminPanel() {
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {match.status === "live" && (
         <>
-          {/* Squad display (read-only during live, collapsible) */}
-          <div className="ap-grid2">
-            <div className="ap-card">
-              <h3>🏏 {battingLabel} — Batting</h3>
-              <ul className="ap-player-list">
-                {match.players.map(p => {
-                  const isS = p.id === match.strikerId;
-                  const isN = p.id === match.nonStrikerId;
-                  return (
-                    <li key={p.id} className={`ap-player-item ${(isS||isN) ? "pi-batting" : p.status === "out" ? "pi-out" : ""}`}>
-                      <span className="ap-player-name">{p.name}</span>
-                      {isS && <span className="ap-player-badge badge-striker">⚡ Striker *</span>}
-                      {isN && <span className="ap-player-badge badge-nonstriker">🏃 Non-striker</span>}
-                      {p.status === "out" && <span className="ap-player-badge badge-out">OUT</span>}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-            <div className="ap-card">
-              <h3>⚡ {bowlingLabel} — Bowling</h3>
-              <ul className="ap-player-list">
-                {match.bowlers.map(b => (
-                  <li key={b.id} className={`ap-player-item ${b.id === match.currentBowlerId ? "pi-current" : ""}`}>
-                    <span className="ap-player-name">{b.name}</span>
-                    {b.id === match.currentBowlerId && <span className="ap-player-badge badge-bowler">🎯 Bowling</span>}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
           {/* Mini scoreline */}
-          <div className="ap-card" style={{ textAlign: "center" }}>
+          <div className="ap-card ap-live-score" style={{ textAlign: "center" }}>
             <div style={{ fontSize: 11, color: "#22c55e", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>
               Inning {match.currentInning} · {battingLabel}
             </div>
@@ -444,7 +435,7 @@ export default function AdminPanel() {
           )}
 
           {/* Selection */}
-          <div className="ap-grid3">
+          <div className="ap-grid3 ap-player-selectors">
             <div className="ap-card">
               <h4>⚡ Striker *</h4>
               <select className="ap-select" value={match.strikerId || ""}
@@ -477,6 +468,45 @@ export default function AdminPanel() {
             </div>
           </div>
 
+          {/* Quick player assignment is considerably faster than scrolling native
+              selects on a small screen. Desktop keeps the familiar select fields. */}
+          <details className="ap-card ap-mobile-player-pickers" open={!readyToInput || match.waitingForBatsman || needNewBowler}>
+            <summary>Change batters or bowler</summary>
+            <div className="ap-picker-group">
+              <h4>⚡ Striker</h4>
+              <div className="ap-picker-options">
+                {match.players.filter(p => p.status !== "out").map(p => (
+                  <button key={p.id} className={`ap-picker-btn ${p.id === match.strikerId ? "is-selected" : ""}`}
+                    onClick={() => socket.emit("setStriker", { playerId: p.id })}>
+                    {p.name}{p.id === match.strikerId ? " · On strike" : ""}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="ap-picker-group">
+              <h4>🏃 Non-striker</h4>
+              <div className="ap-picker-options">
+                {match.players.filter(p => p.status !== "out").map(p => (
+                  <button key={p.id} className={`ap-picker-btn ${p.id === match.nonStrikerId ? "is-selected" : ""}`}
+                    onClick={() => socket.emit("setNonStriker", { playerId: p.id })}>
+                    {p.name}{p.id === match.nonStrikerId ? " · At crease" : ""}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="ap-picker-group">
+              <h4>🎯 Bowler</h4>
+              <div className="ap-picker-options">
+                {match.bowlers.map(b => (
+                  <button key={b.id} className={`ap-picker-btn ap-bowler-picker ${b.id === match.currentBowlerId ? "is-selected" : ""}`}
+                    onClick={() => socket.emit("setCurrentBowler", { bowlerId: b.id })}>
+                    {b.name}{b.id === match.currentBowlerId ? " · Bowling" : ""}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </details>
+
           {/* Wicket: next batsman */}
           {match.waitingForBatsman && (
             <div className="ap-card ap-alert-red">
@@ -503,7 +533,7 @@ export default function AdminPanel() {
           )}
 
           {/* Current over */}
-          <div className="ap-card">
+          <div className="ap-card ap-current-over">
             <div className="ap-over-title">Over {completedOvers + 1} — {legalInOver} / 6 balls</div>
             <div className="ap-over-row">
               {match.currentOverBalls.map((ball, i) => (
@@ -518,8 +548,14 @@ export default function AdminPanel() {
           {error && <div className="ap-error">⚠️ {error}</div>}
 
           {/* Ball input */}
-          <div className="ap-card">
-            <h3>🏏 Ball by Ball Input</h3>
+          <div className="ap-card ap-scoring-pad">
+            <div className="ap-scoring-pad-heading">
+              <h3>🏏 Score this ball</h3>
+              <div className="ap-scoring-actions">
+                <button className="ap-undo-btn" type="button" disabled={!match.undoStack?.length} onClick={() => socket.emit("undoLastDelivery")}>↶ Undo</button>
+                <span className="ap-tap-hint">Tap once</span>
+              </div>
+            </div>
             {readyToInput ? (
               <>
                 <div className="ap-ball-info">
@@ -527,11 +563,14 @@ export default function AdminPanel() {
                   <span className="sep">vs</span>
                   <span>🎯 <strong>{curBowler?.name}</strong></span>
                 </div>
+                <label className="ap-dismissal-picker">Wicket type <select className="ap-select" value={dismissalType} onChange={(event) => setDismissalType(event.target.value)}><option value="BOWLED">Bowled</option><option value="CAUGHT">Caught</option><option value="CAUGHT_AND_BOWLED">Caught & bowled</option><option value="LBW">LBW</option><option value="RUN_OUT">Run out</option><option value="STUMPED">Stumped</option><option value="HIT_WICKET">Hit wicket</option><option value="RETIRED_HURT">Retired hurt</option><option value="RETIRED_OUT">Retired out</option></select></label>
                 <div className="ap-ball-grid">
                   {BALL_BTNS.map(({ type, label, size }) => (
                     <button key={type} className={`ap-ball-btn type-${type} size-${size}`}
                       onClick={() => addBall(type)}
-                      title={type === "Wd" ? "Wide" : type === "Nb" ? "No Ball" : type === "W" ? "Wicket" : `${type} run${type !== "1" ? "s" : ""}`}>
+                      disabled={isScoring}
+                      aria-label={type === "Wd" ? "Add wide" : type === "Nb" ? "Add no ball" : type === "By" ? "Add bye" : type === "Lb" ? "Add leg bye" : type === "W" ? "Record wicket" : `Add ${type} runs`}
+                      title={type === "Wd" ? "Wide" : type === "Nb" ? "No Ball" : type === "By" ? "Bye" : type === "Lb" ? "Leg bye" : type === "W" ? "Wicket" : `${type} run${type !== "1" ? "s" : ""}`}>
                       {label}
                     </button>
                   ))}
@@ -548,8 +587,48 @@ export default function AdminPanel() {
               </p>
             )}
           </div>
+
+          {/* Squad detail remains available during a live match without pushing
+              the score pad below the fold on phones. */}
+          <details className="ap-live-squads">
+            <summary>View players and bowling squad</summary>
+            <div className="ap-grid2">
+              <div className="ap-card">
+                <h3>🏏 {battingLabel} — Batting</h3>
+                <ul className="ap-player-list">
+                  {match.players.map(p => {
+                    const isS = p.id === match.strikerId;
+                    const isN = p.id === match.nonStrikerId;
+                    return (
+                      <li key={p.id} className={`ap-player-item ${(isS||isN) ? "pi-batting" : p.status === "out" ? "pi-out" : ""}`}>
+                        <span className="ap-player-name">{p.name}</span>
+                        {isS && <span className="ap-player-badge badge-striker">⚡ Striker *</span>}
+                        {isN && <span className="ap-player-badge badge-nonstriker">🏃 Non-striker</span>}
+                        {p.status === "out" && <span className="ap-player-badge badge-out">OUT</span>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+              <div className="ap-card">
+                <h3>⚡ {bowlingLabel} — Bowling</h3>
+                <ul className="ap-player-list">
+                  {match.bowlers.map(b => (
+                    <li key={b.id} className={`ap-player-item ${b.id === match.currentBowlerId ? "pi-current" : ""}`}>
+                      <span className="ap-player-name">{b.name}</span>
+                      {b.id === match.currentBowlerId && <span className="ap-player-badge badge-bowler">🎯 Bowling</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </details>
         </>
       )}
+
+      <TournamentManager />
+      <RosterManager />
+      <FixtureManager />
 
       {/* RRD Management section shown when authenticated */}
       {isAuthenticated && <AdminStandings />}

@@ -134,21 +134,24 @@ export default function Overlay() {
   return (
     <div className="overlay-wrapper">
       <div className="overlay-container" style={containerStyle}>
-        {/* Top Left: Tournament & LIVE */}
+        {/* Top Left: Sponsor/Logo */}
         <div className="ov-top-left">
-        <div className="ov-tournament-name">CHAMPIONS CUP 2026</div>
-        <div className="ov-live-indicator">
-          <span className="ov-live-dot"></span> LIVE
+          <div className="ov-sponsor-area">
+            <img src="/logo.jpg" alt="Youth Empowerment Hub" className="ov-logo-img" />
+          </div>
         </div>
-      </div>
 
-      {/* Top Right: CRR & Sponsor */}
-      <div className="ov-top-right">
-        <div className="ov-sponsor-area">
-          <span className="ov-sponsor-text">SPONSORED BY</span>
-          <div className="ov-sponsor-placeholder">YOUR LOGO</div>
+        {/* Top Center: Tournament Name */}
+        <div className="ov-top-center">
+          <div className="ov-tournament-name">CHAMPIONS CUP 2026</div>
         </div>
-      </div>
+
+        {/* Top Right: LIVE Indicator */}
+        <div className="ov-top-right">
+          <div className="ov-live-indicator">
+            <span className="ov-live-dot"></span> LIVE
+          </div>
+        </div>
 
       {/* Animation Banners (4, 6, Wicket) */}
       {animation && (
