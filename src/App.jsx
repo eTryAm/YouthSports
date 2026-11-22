@@ -1,12 +1,18 @@
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useParams } from "react-router-dom";
 import { useState } from "react";
 import AdminPanel   from "./AdminPanel.jsx";
 import Scoreboard   from "./Scoreboard.jsx";
 import Stats        from "./Stats.jsx";
 import Overlay      from "./Overlay.jsx";
 import PointsTable  from "./PointsTable.jsx";
-import Tournaments  from "./Tournaments.jsx";
+import Tournaments, { TournamentDetail } from "./Tournaments.jsx";
 import "./App.css";
+
+/** Thin wrapper so React Router injects the :slug param */
+function TournamentDetailPage() {
+  const { slug } = useParams();
+  return <TournamentDetail slug={slug} />;
+}
 
 function AppContent() {
   const location = useLocation();
@@ -20,7 +26,6 @@ function AppContent() {
         <nav className="app-nav">
           <div className="nav-brand">🏏 CricketLive</div>
 
-          {/* Hamburger toggle */}
           <button
             className={`hamburger ${menuOpen ? "open" : ""}`}
             onClick={() => setMenuOpen(v => !v)}
@@ -31,7 +36,6 @@ function AppContent() {
             <span className="hamburger-bar" />
           </button>
 
-          {/* Links — visible on desktop, toggled on mobile */}
           <div className={`nav-links ${menuOpen ? "nav-links--open" : ""}`}>
             <NavLink to="/" end
               className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
@@ -62,15 +66,15 @@ function AppContent() {
         </nav>
       )}
 
-      {/* ── Routes ── */}
       <main>
         <Routes>
-          <Route path="/"              element={<Scoreboard />} />
-          <Route path="/points-table"  element={<PointsTable />} />
-          <Route path="/tournaments"   element={<Tournaments />} />
-          <Route path="/stats"         element={<Stats />} />
-          <Route path="/admin"         element={<AdminPanel />} />
-          <Route path="/overlay"       element={<Overlay />} />
+          <Route path="/"                  element={<Scoreboard />} />
+          <Route path="/points-table"      element={<PointsTable />} />
+          <Route path="/tournaments"       element={<Tournaments />} />
+          <Route path="/tournaments/:slug" element={<TournamentDetailPage />} />
+          <Route path="/stats"             element={<Stats />} />
+          <Route path="/admin"             element={<AdminPanel />} />
+          <Route path="/overlay"           element={<Overlay />} />
         </Routes>
       </main>
     </div>
