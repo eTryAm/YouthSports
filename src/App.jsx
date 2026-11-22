@@ -1,11 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, NavLink, useLocation, useParams } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import AdminPanel   from "./AdminPanel.jsx";
 import Scoreboard   from "./Scoreboard.jsx";
 import Stats        from "./Stats.jsx";
 import Overlay      from "./Overlay.jsx";
 import PointsTable  from "./PointsTable.jsx";
-import Tournaments, { TournamentDetail } from "./Tournaments.jsx";
+import Tournaments  from "./Tournaments.jsx";
 import "./App.css";
 
 function AppContent() {
@@ -46,7 +46,7 @@ function AppContent() {
             <NavLink to="/tournaments"
               className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
               onClick={() => setMenuOpen(false)}>
-              🏟️ Tournaments
+              🎯 Tournaments
             </NavLink>
             <NavLink to="/stats"
               className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
@@ -68,7 +68,6 @@ function AppContent() {
           <Route path="/"              element={<Scoreboard />} />
           <Route path="/points-table"  element={<PointsTable />} />
           <Route path="/tournaments"   element={<Tournaments />} />
-          <Route path="/tournaments/:slug" element={<TournamentRoute />} />
           <Route path="/stats"         element={<Stats />} />
           <Route path="/admin"         element={<AdminPanel />} />
           <Route path="/overlay"       element={<Overlay />} />
@@ -76,11 +75,6 @@ function AppContent() {
       </main>
     </div>
   );
-}
-
-function TournamentRoute() {
-  const { slug } = useParams();
-  return <TournamentDetail slug={slug} />;
 }
 
 function App() {

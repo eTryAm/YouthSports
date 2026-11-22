@@ -143,7 +143,9 @@ export default function Overlay() {
 
         {/* Top Center: Tournament Name */}
         <div className="ov-top-center">
-          <div className="ov-tournament-name">CHAMPIONS CUP 2026</div>
+          <div className="ov-tournament-name">
+            {match.tournamentName || "CHAMPIONS CUP 2026"}
+          </div>
         </div>
 
         {/* Top Right: LIVE Indicator */}
