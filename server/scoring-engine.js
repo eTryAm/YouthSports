@@ -7,12 +7,12 @@ const BOWLER_WICKETS = new Set(['BOWLED', 'CAUGHT', 'CAUGHT_AND_BOWLED', 'LBW', 
 
 function normaliseDelivery(input) {
   if (typeof input === 'string') {
-    if (/^[0-6]$/.test(input)) return { kind: 'RUN', batterRuns: Number(input) };
-    if (input === 'Wd') return { kind: 'WIDE', extraRuns: 1 };
+    if (/^[0-6]$/.test(input)) return { kind: 'RUN', batterRuns: Number(input), extraRuns: 0 };
+    if (input === 'Wd') return { kind: 'WIDE', extraRuns: 1, batterRuns: 0 };
     if (input === 'Nb') return { kind: 'NO_BALL', extraRuns: 1, batterRuns: 0 };
-    if (input === 'By') return { kind: 'BYE', extraRuns: 1 };
-    if (input === 'Lb') return { kind: 'LEG_BYE', extraRuns: 1 };
-    if (input === 'W') return { kind: 'WICKET', dismissalType: 'BOWLED' };
+    if (input === 'By') return { kind: 'BYE', extraRuns: 1, batterRuns: 0 };
+    if (input === 'Lb') return { kind: 'LEG_BYE', extraRuns: 1, batterRuns: 0 };
+    if (input === 'W') return { kind: 'WICKET', dismissalType: 'BOWLED', extraRuns: 0, batterRuns: 0 };
   }
   const kind = String(input?.kind || '').toUpperCase();
   const batterRuns = Number(input?.batterRuns || 0);
@@ -31,7 +31,7 @@ function applyDelivery(state, input, { striker, bowler }) {
   const extras = state.extras || (state.extras = { wides: 0, noBalls: 0, byes: 0, legByes: 0, penalty: 0 });
   for (const key of ['wides', 'noBalls', 'byes', 'legByes', 'penalty']) extras[key] ||= 0;
   const batterRuns = event.kind === 'RUN' || event.kind === 'NO_BALL' ? event.batterRuns : 0;
-  let extraRuns = event.extraRuns;
+  let extraRuns = Number(event.extraRuns) || 0;
   if (event.kind === 'WIDE') extras.wides += extraRuns;
   if (event.kind === 'NO_BALL') extras.noBalls += extraRuns;
   if (event.kind === 'BYE') extras.byes += extraRuns;
